@@ -7,12 +7,16 @@
 const char *WIFI_SSID = "YOUR_WIFI_SSID";
 const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
 
-// ===== UART / RS485
-#define UART_RX 16
-#define UART_TX 17
+// ===== UART / RS485 we dont need Serial2, using Serial with swap
+/*#define UART_RX 13
+#define UART_TX 15
 #define UART_BAUD 115200
 #define RS485_DE_RE_PIN 4
-#define USE_RS485_DIR false
+#define USE_RS485_DIR false*/
+
+#define PIN_PWM_FUN 12 // Control of external cooling fan 
+#define MAX_POWER 10000 // Max Power for cooler speed regulation 1:100 W
+#define MIN_POWER 5000 // Min Power for cooler speed regulation 1:100 W
 
 // ===== Modbus
 #define MODBUS_SLAVE_ID 1
@@ -412,7 +416,7 @@ delayMicroseconds(10);
 #endif
 }
 void postTransmission() {
-#ifdef USE_RS485_DIR
+#if USE_RS485_DIR
  delayMicroseconds(10);
   digitalWrite(RS485_DE_RE_PIN, LOW);
 #endif
@@ -457,6 +461,8 @@ void handleStatus() {
   ok &= mbReadU16(REG_OUT_CURR, oA);
   ok &= mbReadU16(REG_OUT_POWER, oP);
   bool mpptOk = mbReadU16(REG_MPPT_ENABLE, mppt); // experimental; may fail
+   
+  analogWrite(PIN_PWM_FUN, map(oP,MIN_POWER,MAX_POWER,0,1023)); // Control fan speed based on power
 
   String json = "{";
   json += "\"ok\":";
@@ -603,6 +609,8 @@ void notFound() { server.send(404, "text/plain", "Not found"); }
 void connectWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
+  Serial.flush();
+  Serial.swap();
   Serial.print("Connecting to WiFi");
   unsigned long t0 = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000) {
@@ -619,17 +627,23 @@ void connectWiFi() {
     Serial.print("AP IP: ");
     Serial.println(WiFi.softAPIP());
   }
+  Serial.flush();
+  Serial.swap();
 }
 
 void setup() {
   Serial.begin(115200);
+  pinMode(PIN_PWM_FUN, OUTPUT);
+  analogWrite(PIN_PWM_FUN, 512); // cooler init at half speed
   delay(100);
-  Serial2.begin(UART_BAUD, SERIAL_8N1, UART_RX, UART_TX);
+  Serial.flush();
+  Serial.swap();
+  //Serial2.begin(UART_BAUD, SERIAL_8N1, UART_RX, UART_TX); // Goin to use swap instead 
 #if USE_RS485_DIR
   pinMode(RS485_DE_RE_PIN, OUTPUT);
   digitalWrite(RS485_DE_RE_PIN, LOW);
 #endif
-  node.begin(MODBUS_SLAVE_ID, Serial2);
+  node.begin(MODBUS_SLAVE_ID, Serial);
   node.preTransmission(preTransmission);
   node.postTransmission(postTransmission);
 
@@ -640,7 +654,12 @@ void setup() {
   server.on("/api/scan", HTTP_GET, handleScan);
   server.onNotFound(notFound);
   server.begin();
+  Serial.flush();
+  Serial.swap();
   Serial.println("HTTP server started.");
+  Serial.flush();
+  Serial.swap();
+  
 }
 
 void loop() { server.handleClient(); }
