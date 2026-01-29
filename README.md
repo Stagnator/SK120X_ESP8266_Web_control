@@ -1,4 +1,4 @@
-# SK120x Web Controller (ESP8266 + Modbus)
+# SK120x Web Controller (ESP8266 + Modbus) (NOT TESTED)
 
 This project provides a **web-based controller** for the [SK120X DC Regulated Power Supply DC-DC Step Up/Down Converter](https://www.amazon.com/SK120X-Regulated-Stabilized-Voltage-Converter/dp/B0F18HZD97) using an **ESP8266** and **Modbus RTU**.
 
