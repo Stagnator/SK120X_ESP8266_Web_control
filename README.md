@@ -1,6 +1,6 @@
-# SK120x Web Controller (ESP32 + RS485 + Modbus)
+# SK120x Web Controller (ESP8266 + Modbus)
 
-This project provides a **web-based controller** for the [SK120X DC Regulated Power Supply DC-DC Step Up/Down Converter](https://www.amazon.com/SK120X-Regulated-Stabilized-Voltage-Converter/dp/B0F18HZD97) using an **ESP32**, **RS485 transceiver**, and **Modbus RTU**.
+This project provides a **web-based controller** for the [SK120X DC Regulated Power Supply DC-DC Step Up/Down Converter](https://www.amazon.com/SK120X-Regulated-Stabilized-Voltage-Converter/dp/B0F18HZD97) using an **ESP8266** and **Modbus RTU**.
 
 ![SK120X Module](https://m.media-amazon.com/images/I/51RH2QGF4BL._AC_SL1500_.jpg)
 
@@ -8,7 +8,7 @@ This project provides a **web-based controller** for the [SK120X DC Regulated Po
 
 ## ✨ Features
 - 📡 WiFi connectivity (station or fallback access point mode)  
-- 🌐 Embedded web interface (HTML/CSS/JS served directly from ESP32)  
+- 🌐 Embedded web interface (HTML/CSS/JS served directly from ESP8266)  
 - ⚡ Live monitoring of:
   - Set Voltage / Current  
   - Output Voltage / Current / Power  
@@ -36,32 +36,32 @@ The UI is entirely self-contained (no CDN or external JS), ensuring it works off
 ---
 
 ## ⚙️ Hardware Setup
-- **ESP32** development board  
-- **RS485 transceiver module** (DE/RE control supported, configurable)  
+- **ESP8266** WEMOS mini development board  
 - **SK120X DC-DC Power Supply**  
 
 **Pin Mapping (default):**
-| Signal        | ESP32 Pin |
-|---------------|-----------|
-| UART RX       | 16        |
-| UART TX       | 17        |
-| RS485 DE/RE   | 4         |
-| Baudrate      | 115200    |
+| SK120X PIN    | ESP8266 PIN |
+|---------------|-------------|
+| UART RX       | 15          |
+| UART TX       | 13          |
+| +5v           | 5V          |
+| GND           | GND         |
+| Baudrate      | 115200      |
 
 ---
 
 ## 🔌 Software Setup
-1. Install [Arduino IDE](https://www.arduino.cc/en/software) with ESP32 board support  
+1. Install [Arduino IDE](https://www.arduino.cc/en/software) with ESP8266 board support  
 2. Install libraries:  
    - `ModbusMaster`  
-   - `WebServer` (comes with ESP32 Arduino core)  
+   - `WebServer` (comes with ESP8266 Arduino core)  
 3. Update your WiFi credentials in the sketch:  
    ```cpp
    const char *WIFI_SSID = "YOUR_WIFI_SSID";
    const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
-Compile & upload to your ESP32.
+Compile & upload to your ESP8266.
 
-Open Serial Monitor to see IP address (or connect to fallback AP SK120x-ESP32).
+Open Serial Monitor to see IP address (or connect to fallback AP SK120x-ESP8266).
 
 Navigate to the IP address in your browser to access the web UI.
 
