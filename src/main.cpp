@@ -4,8 +4,8 @@
 #include <ESP8266WiFi.h>
 
 // ===== WiFi
-const char *WIFI_SSID = "YOUR_WIFI_SSID";
-const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
+const char *WIFI_SSID = "Kyivstar_D4C4";
+const char *WIFI_PASS = "17112002";
 
 // ===== UART / RS485 we dont need Serial2, using Serial with swap
 /*#define UART_RX 13
@@ -462,7 +462,12 @@ void handleStatus() {
   ok &= mbReadU16(REG_OUT_POWER, oP);
   bool mpptOk = mbReadU16(REG_MPPT_ENABLE, mppt); // experimental; may fail
    
-  analogWrite(PIN_PWM_FUN, map(oP,MIN_POWER,MAX_POWER,0,1023)); // Control fan speed based on power
+  analogWrite(PIN_PWM_FUN, map(oP,MIN_POWER,MAX_POWER,0,255)); // Control fan speed based on power
+  Serial.flush();
+  Serial.swap();
+  Serial.println(oP); // Debug: show current power on Serial monitor
+  Serial.flush();
+  Serial.swap();
 
   String json = "{";
   json += "\"ok\":";
@@ -634,7 +639,7 @@ void connectWiFi() {
 void setup() {
   Serial.begin(115200);
   pinMode(PIN_PWM_FUN, OUTPUT);
-  analogWrite(PIN_PWM_FUN, 512); // cooler init at half speed
+  analogWrite(PIN_PWM_FUN, 128); // cooler init at half speed
   delay(100);
   Serial.flush();
   Serial.swap();
