@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ModbusMaster.h>
-#include <WebServer.h>
-#include <WiFi.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266WiFi.h>
 
 // ===== WiFi
 const char *WIFI_SSID = "YOUR_WIFI_SSID";
@@ -33,7 +33,7 @@ const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
 #define REG_MPPT_ENABLE 0x001F // 0/1 (medium confidence)
 
 ModbusMaster node;
-WebServer server(80);
+ESP8266WebServer server(80);
 
 // ---------- HTML ----------
 const char INDEX_HTML[] PROGMEM = R"HTML(<!doctype html>
@@ -622,8 +622,8 @@ void connectWiFi() {
     Serial.print("WiFi OK, IP: ");
     Serial.println(WiFi.localIP());
   } else {
-    Serial.println("WiFi failed; starting AP 'SK120x-ESP32'...");
-    WiFi.softAP("SK120x-ESP32");
+    Serial.println("WiFi failed; starting AP 'SK120x-ESP8266'...");
+    WiFi.softAP("SK120x-ESP8266");
     Serial.print("AP IP: ");
     Serial.println(WiFi.softAPIP());
   }
