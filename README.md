@@ -1,8 +1,10 @@
-# SK120x Web Controller (ESP8266 + Modbus) (NOT TESTED)
+# SK120x Web Controller (ESP8266 + RS485-to-UART module + Modbus) (NOT TESTED)
 
-This project provides a **web-based controller** for the [SK120X DC Regulated Power Supply DC-DC Step Up/Down Converter](https://www.amazon.com/SK120X-Regulated-Stabilized-Voltage-Converter/dp/B0F18HZD97) using an **ESP8266** and **Modbus RTU**.
+This project provides a **web-based controller** for the [SK120X DC Regulated Power Supply DC-DC Step Up/Down Converter](https://www.amazon.com/SK120X-Regulated-Stabilized-Voltage-Converter/dp/B0F18HZD97) using an **ESP8266**, **RS485 transceiver**, and **Modbus RTU**.
 
 ![SK120X Module](https://m.media-amazon.com/images/I/51RH2QGF4BL._AC_SL1500_.jpg)
+
+<img width="550" height="550" alt="image" src="https://github.com/Stagnator/SK120X_ESP8266_Web_control/blob/esp8266/images/MAX485_module_1-550x550.jpg" />
 
 ---
 
@@ -36,14 +38,16 @@ The UI is entirely self-contained (no CDN or external JS), ensuring it works off
 ---
 
 ## ⚙️ Hardware Setup
-- **ESP8266** WEMOS mini development board  
+- **ESP8266** WEMOS mini development board
+- **RS485 transceiver module** (DE/RE control supported, configurable)  
 - **SK120X DC-DC Power Supply**  
 
 **Pin Mapping (default):**
-| SK120X PIN    | ESP8266 PIN |
+| Signal        | ESP8266 PIN |
 |---------------|-------------|
-| UART RX       | 15          |
-| UART TX       | 13          |
+| RS485 DI      | 15          |
+| RS485 RO      | 13          |
+| RS485 DE/RE   | 12          | 
 | +5v           | 5V          |
 | GND           | GND         |
 | Baudrate      | 115200      |
@@ -86,6 +90,7 @@ The project mimics LabVIEW-style panels for readability and modular control.
 📚 Resources
 
 SK120X DC Power Supply on Amazon
+UART-RS485 converter MAX485
 
 📜 License
 
