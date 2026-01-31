@@ -4,14 +4,14 @@
 #include <ESP8266WiFi.h>
 
 // ===== WiFi
-const char *WIFI_SSID = "8888";
-const char *WIFI_PASS = "****";
+const char *WIFI_SSID = "******";
+const char *WIFI_PASS = "******";
 
 // ===== UART / RS485 we dont need Serial2, using Serial with swap
 /*#define UART_RX 13
 #define UART_TX 15
 #define UART_BAUD 115200 */
-#define RS485_DE_RE_PIN 4
+#define RS485_DE_RE_PIN 16
 #define USE_RS485_DIR false
 
 #define PIN_PWM_FUN 12 // Control of external cooling fan 
@@ -463,12 +463,7 @@ void handleStatus() {
   bool mpptOk = mbReadU16(REG_MPPT_ENABLE, mppt); // experimental; may fail
    
   analogWrite(PIN_PWM_FUN, map(oP,MIN_POWER,MAX_POWER,0,255)); // Control fan speed based on power
-  Serial.flush();
-  Serial.swap();
-  Serial.println(oP); // Debug: show current power on Serial monitor
-  Serial.flush();
-  Serial.swap();
-
+  
   String json = "{";
   json += "\"ok\":";
   json += ok ? "true" : "false";
@@ -642,7 +637,6 @@ void setup() {
   pinMode(PIN_PWM_FUN, OUTPUT);
   analogWrite(PIN_PWM_FUN, 128); // cooler init at half speed
   delay(100);
-  //Serial.flush();
   Serial.swap();
   //Serial2.begin(UART_BAUD, SERIAL_8N1, UART_RX, UART_TX); // Goin to use swap instead 
 #if USE_RS485_DIR
