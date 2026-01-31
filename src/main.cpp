@@ -2,6 +2,7 @@
 #include <ModbusMaster.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266httpUpdate.h>
 
 // ===== WiFi
 const char *WIFI_SSID = "******";
