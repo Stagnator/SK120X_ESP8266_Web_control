@@ -5,8 +5,14 @@
 #include <ESP8266httpUpdate.h>
 
 // ===== WiFi
-const char *WIFI_SSID = "******";
-const char *WIFI_PASS = "******";
+#include <JustMyWifiSet.h>
+const char *WIFI_SSID = MY_WIFI_SSID;
+const char *WIFI_PASS = MY_WIFI_PASS;
+const char *OTA_IP_ADDR = MY_OTA_IP_ADDR;
+
+//const char *WIFI_SSID = "MY_WIFI_SSID";
+//const char *WIFI_PASS = "MY_WIFI_PASS";
+//const char *OTA_IP_ADDR = "MY_OTA_IP_ADDR";
 
 // ===== UART / RS485 we dont need Serial2, using Serial with swap
 /*#define UART_RX 13
