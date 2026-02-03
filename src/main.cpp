@@ -11,13 +11,12 @@
 // const char *WIFI_SSID = MY_WIFI_SSID;
 // const char *WIFI_PASS = MY_WIFI_PASS;
 // const char *OTA_IP_ADDR = MY_OTA_IP_ADDR;
-const char *WIFI_SSID = "MY_WIFI_SSID";
-const char *WIFI_PASS = "MY_WIFI_PASS";
-// const char *OTA_IP_ADDR = "MY_OTA_IP_ADDR";
+const char *WIFI_SSID = "YOUR_WIFI_SSID";
+const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
 
 const char *AP_HOSTNAME = "Lab_bench_PSU AP";
 const char *ST_HOSTNAME = "Lab_bench_PSU STA";
-#define DHCP_ENABLED false // Set to false to use static IP
+#define DHCP_ENABLED false // Set to true to use DHCP, false for static IP
 IPAddress local_IP(192, 168, 1, 36);
 IPAddress gateway(192, 168, 1, 1);
 IPAddress subnet(255, 255, 255, 0);

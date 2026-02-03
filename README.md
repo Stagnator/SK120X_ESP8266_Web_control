@@ -13,7 +13,8 @@ This project provides a **web-based controller** for the [SK120X DC Regulated Po
   - Set Voltage / Current  
   - Output Voltage / Current / Power  
   - Output state (ON/OFF)  
-  - MPPT (experimental)  
+  - MPPT (experimental) 
+  - OTA Update (local net only)  
 - 🎛️ Remote control of:
   - Voltage & Current setpoints  
   - Output toggle  
@@ -54,14 +55,13 @@ The UI is entirely self-contained (no CDN or external JS), ensuring it works off
 1. Install [Arduino IDE](https://www.arduino.cc/en/software) with ESP8266 board support  
 2. Install libraries:  
    - `ModbusMaster`  
-   - `WebServer` (comes with ESP8266 Arduino core)  
 3. Update your WiFi credentials in the sketch:  
    ```cpp
    const char *WIFI_SSID = "YOUR_WIFI_SSID";
    const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
 Compile & upload to your ESP8266.
 
-Open Serial Monitor to see IP address (or connect to fallback AP SK120x-ESP8266).
+Open Serial Monitor to see IP address (or connect to fallback AP "Lab_bench_PSU AP").
 
 Navigate to the IP address in your browser to access the web UI.
 
