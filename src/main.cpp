@@ -2,17 +2,26 @@
 #include <ModbusMaster.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266httpUpdate.h>
+#include <ESP8266mDNS.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 // ===== WiFi
-#include <JustMyWifiSet.h>
-const char *WIFI_SSID = MY_WIFI_SSID;
-const char *WIFI_PASS = MY_WIFI_PASS;
-const char *OTA_IP_ADDR = MY_OTA_IP_ADDR;
+// #include <JustMyWifiSet.h>
+// const char *WIFI_SSID = MY_WIFI_SSID;
+// const char *WIFI_PASS = MY_WIFI_PASS;
+// const char *OTA_IP_ADDR = MY_OTA_IP_ADDR;
+const char *WIFI_SSID = "MY_WIFI_SSID";
+const char *WIFI_PASS = "MY_WIFI_PASS";
+// const char *OTA_IP_ADDR = "MY_OTA_IP_ADDR";
 
-//const char *WIFI_SSID = "MY_WIFI_SSID";
-//const char *WIFI_PASS = "MY_WIFI_PASS";
-//const char *OTA_IP_ADDR = "MY_OTA_IP_ADDR";
+const char *AP_HOSTNAME = "Lab_bench_PSU AP";
+const char *ST_HOSTNAME = "Lab_bench_PSU STA";
+#define DHCP_ENABLED false // Set to false to use static IP
+IPAddress local_IP(192, 168, 1, 36);
+IPAddress gateway(192, 168, 1, 1);
+IPAddress subnet(255, 255, 255, 0);
+const char *OTA_PASSWORD = "admin";
 
 // ===== UART / RS485 we dont need Serial2, using Serial with swap
 /*#define UART_RX 13
@@ -21,9 +30,9 @@ const char *OTA_IP_ADDR = MY_OTA_IP_ADDR;
 #define RS485_DE_RE_PIN 16
 #define USE_RS485_DIR false
 
-#define PIN_PWM_FUN 12 // Control of external cooling fan 
+#define PIN_PWM_FUN 12  // Control of external cooling fan
 #define MAX_POWER 10000 // Max Power for cooler speed regulation 1:100 W
-#define MIN_POWER 5000 // Min Power for cooler speed regulation 1:100 W
+#define MIN_POWER 5000  // Min Power for cooler speed regulation 1:100 W
 
 // ===== Modbus
 #define MODBUS_SLAVE_ID 1
@@ -414,36 +423,41 @@ getStatus();
 </html>
 )HTML";
 
-
 // ---------- RS485 Direction ----------
-void preTransmission() {
+void preTransmission()
+{
 #if USE_RS485_DIR
-digitalWrite(RS485_DE_RE_PIN, HIGH);
-delayMicroseconds(10);
+  digitalWrite(RS485_DE_RE_PIN, HIGH);
+  delayMicroseconds(10);
 #endif
 }
-void postTransmission() {
+void postTransmission()
+{
 #ifdef USE_RS485_DIR
- delayMicroseconds(10);
+  delayMicroseconds(10);
   digitalWrite(RS485_DE_RE_PIN, LOW);
 #endif
 }
 
 // ---------- Helpers ----------
-bool mbReadU16(uint16_t reg, uint16_t &out) {
+bool mbReadU16(uint16_t reg, uint16_t &out)
+{
   uint8_t rc = node.readHoldingRegisters(reg, 1);
-  if (rc == node.ku8MBSuccess) {
+  if (rc == node.ku8MBSuccess)
+  {
     out = node.getResponseBuffer(0);
     node.clearResponseBuffer();
     return true;
   }
   return false;
 }
-bool mbWriteU16(uint16_t reg, uint16_t val) {
+bool mbWriteU16(uint16_t reg, uint16_t val)
+{
   uint8_t rc = node.writeSingleRegister(reg, val);
   return rc == node.ku8MBSuccess;
 }
-static bool parseNum(const String &s, uint16_t &out) {
+static bool parseNum(const String &s, uint16_t &out)
+{
   char *end = nullptr;
   uint32_t v = (s.startsWith("0x") || s.startsWith("0X"))
                    ? strtoul(s.c_str(), &end, 16)
@@ -459,7 +473,8 @@ void sendJSON(const String &s) { server.send(200, "application/json", s); }
 
 void handleIndex() { server.send_P(200, "text/html", INDEX_HTML); }
 
-void handleStatus() {
+void handleStatus()
+{
   uint16_t sV = 0, sA = 0, oV = 0, oA = 0, oP = 0, outE = 0, mppt = 0;
   bool ok = true;
   ok &= mbReadU16(REG_SET_VOLT, sV);
@@ -468,9 +483,9 @@ void handleStatus() {
   ok &= mbReadU16(REG_OUT_CURR, oA);
   ok &= mbReadU16(REG_OUT_POWER, oP);
   bool mpptOk = mbReadU16(REG_MPPT_ENABLE, mppt); // experimental; may fail
-   
-  analogWrite(PIN_PWM_FUN, map(oP,MIN_POWER,MAX_POWER,0,255)); // Control fan speed based on power
-  
+
+  analogWrite(PIN_PWM_FUN, map(oP, MIN_POWER, MAX_POWER, 0, 255)); // Control fan speed based on power
+
   String json = "{";
   json += "\"ok\":";
   json += ok ? "true" : "false";
@@ -490,25 +505,33 @@ void handleStatus() {
   json += "\"outP\":";
   json += String(oP / 100.0f, 2);
   json += ",";
-  if (mbReadU16(REG_OUT_ENABLE, outE)) {
+  if (mbReadU16(REG_OUT_ENABLE, outE))
+  {
     json += "\"outputOn\":";
     json += (outE == 1 ? "true" : "false");
     json += ",";
-  } else {
+  }
+  else
+  {
     json += "\"outputOn\":null,";
   }
-  if (mpptOk) {
+  if (mpptOk)
+  {
     json += "\"mppt\":";
     json += (mppt ? "true" : "false");
-  } else {
+  }
+  else
+  {
     json += "\"mppt\":null";
   }
   json += "}";
   sendJSON(json);
 }
 
-void handleWrite() {
-  if (!server.hasArg("reg") || !server.hasArg("val")) {
+void handleWrite()
+{
+  if (!server.hasArg("reg") || !server.hasArg("val"))
+  {
     server.send(400, "application/json",
                 "{\"ok\":false,\"msg\":\"reg & val required\"}");
     return;
@@ -521,8 +544,10 @@ void handleWrite() {
                   (ok ? "true}" : "false,\"msg\":\"write failed\"}"));
 }
 
-String meaningFor(uint16_t addr) {
-  switch (addr) {
+String meaningFor(uint16_t addr)
+{
+  switch (addr)
+  {
   case REG_SET_VOLT:
     return "Vset (V*100)";
   case REG_SET_CURR:
@@ -542,8 +567,10 @@ String meaningFor(uint16_t addr) {
   }
 }
 
-String interpretFor(uint16_t addr, uint16_t raw) {
-  switch (addr) {
+String interpretFor(uint16_t addr, uint16_t raw)
+{
+  switch (addr)
+  {
   case REG_SET_VOLT:
   case REG_OUT_VOLT:
     return String(raw / 100.0f, 2) + " V";
@@ -561,23 +588,29 @@ String interpretFor(uint16_t addr, uint16_t raw) {
   }
 }
 
-void handleScan() {
+void handleScan()
+{
   uint16_t start = 0x0000, end = 0x0080;
-  if (server.hasArg("start")) {
-    if (!parseNum(server.arg("start"), start)) {
+  if (server.hasArg("start"))
+  {
+    if (!parseNum(server.arg("start"), start))
+    {
       server.send(400, "application/json",
                   "{\"ok\":false,\"msg\":\"bad start\"}");
       return;
     }
   }
-  if (server.hasArg("end")) {
-    if (!parseNum(server.arg("end"), end)) {
+  if (server.hasArg("end"))
+  {
+    if (!parseNum(server.arg("end"), end))
+    {
       server.send(400, "application/json",
                   "{\"ok\":false,\"msg\":\"bad end\"}");
       return;
     }
   }
-  if (end < start || (end - start) > 256) {
+  if (end < start || (end - start) > 256)
+  {
     server.send(400, "application/json",
                 "{\"ok\":false,\"msg\":\"range too large\"}");
     return;
@@ -585,10 +618,12 @@ void handleScan() {
 
   String json = "{\"ok\":true,\"rows\":[";
   bool first = true;
-  for (uint16_t reg = start; reg <= end; reg++) {
+  for (uint16_t reg = start; reg <= end; reg++)
+  {
     uint16_t v = 0;
     uint8_t rc = node.readHoldingRegisters(reg, 1);
-    if (rc == node.ku8MBSuccess) {
+    if (rc == node.ku8MBSuccess)
+    {
       v = node.getResponseBuffer(0);
       node.clearResponseBuffer();
       if (!first)
@@ -597,10 +632,12 @@ void handleScan() {
       String m = meaningFor(reg);
       String i = interpretFor(reg, v);
       json += "{\"addr\":" + String(reg) + ",\"dec\":" + String(v);
-      if (m.length()) {
+      if (m.length())
+      {
         json += ",\"meaning\":\"" + m + "\"";
       }
-      if (i.length()) {
+      if (i.length())
+      {
         json += ",\"interpretation\":\"" + i + "\"";
       }
       json += "}";
@@ -613,39 +650,98 @@ void handleScan() {
 
 void notFound() { server.send(404, "text/plain", "Not found"); }
 
-void connectWiFi() {
+void connectWiFi()
+{
+  WiFi.hostname(ST_HOSTNAME);
+  if (!DHCP_ENABLED)
+  {
+    bool b = WiFi.config(local_IP, gateway, subnet);
+  }
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
-  Serial.flush();
-  Serial.swap();
   Serial.print("Connecting to WiFi");
   unsigned long t0 = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000) {
+  while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000)
+  {
     delay(500);
     Serial.print(".");
   }
   Serial.println();
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.status() == WL_CONNECTED)
+  {
     Serial.print("WiFi OK, IP: ");
     Serial.println(WiFi.localIP());
-  } else {
-    Serial.println("WiFi failed; starting AP 'SK120x-ESP8266'...");
-    WiFi.softAP("SK120x-ESP8266");
+  }
+  else
+  {
+    Serial.print("WiFi failed; starting AP: ");
+    Serial.println(AP_HOSTNAME);
+    WiFi.softAP(AP_HOSTNAME);
     Serial.print("AP IP: ");
     Serial.println(WiFi.softAPIP());
   }
-  Serial.flush();
-  Serial.swap();
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(115200);
-  pinMode(15, OUTPUT);
+  pinMode(15, OUTPUT); // esp8266 had some bag usinig serial swap without setting pin 15 to output?
   pinMode(PIN_PWM_FUN, OUTPUT);
   analogWrite(PIN_PWM_FUN, 128); // cooler init at half speed
   delay(100);
+  connectWiFi();
+  if (WiFi.getMode() != WIFI_AP) // Only setup OTA if not in AP mode
+  {
+    ArduinoOTA.setHostname(ST_HOSTNAME);
+    ArduinoOTA.setPassword(OTA_PASSWORD);
+
+    ArduinoOTA.onStart([]()
+                       {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else {  // U_FS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.swap(); Serial.println("Start updating " + type); Serial.flush(); Serial.swap(); });
+
+    ArduinoOTA.onEnd([]()
+                     { Serial.swap(); Serial.println("\nEnd"); Serial.flush(); Serial.swap(); });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
+                     { Serial.swap(); Serial.printf("Progress: %u%%\r", (progress / (total / 100))); Serial.flush(); Serial.swap(); });
+    ArduinoOTA.onError([](ota_error_t error)
+                     { Serial.swap();
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    } Serial.flush();
+  Serial.swap(); });
+
+    ArduinoOTA.begin();
+    Serial.println("OTA Ready");
+  }
+
+  server.on("/", HTTP_GET, handleIndex);
+  server.on("/api/status", HTTP_GET, handleStatus);
+  server.on("/api/write", HTTP_POST, handleWrite);
+  server.on("/api/scan", HTTP_GET, handleScan);
+  server.onNotFound(notFound);
+  server.begin();
+  Serial.println("HTTP server started.");
+
+  // Serial2.begin(UART_BAUD, SERIAL_8N1, UART_RX, UART_TX); // Goin to use swap instead
+  Serial.flush();
   Serial.swap();
-  //Serial2.begin(UART_BAUD, SERIAL_8N1, UART_RX, UART_TX); // Goin to use swap instead 
 #if USE_RS485_DIR
   pinMode(RS485_DE_RE_PIN, OUTPUT);
   digitalWrite(RS485_DE_RE_PIN, LOW);
@@ -653,20 +749,10 @@ void setup() {
   node.begin(MODBUS_SLAVE_ID, Serial);
   node.preTransmission(preTransmission);
   node.postTransmission(postTransmission);
-
-  connectWiFi();
-  server.on("/", HTTP_GET, handleIndex);
-  server.on("/api/status", HTTP_GET, handleStatus);
-  server.on("/api/write", HTTP_POST, handleWrite);
-  server.on("/api/scan", HTTP_GET, handleScan);
-  server.onNotFound(notFound);
-  server.begin();
-  Serial.flush();
-  Serial.swap();
-  Serial.println("HTTP server started.");
-  Serial.flush();
-  Serial.swap();
-  
 }
 
-void loop() { server.handleClient(); }
+void loop()
+{
+  server.handleClient();
+  ArduinoOTA.handle();
+}
