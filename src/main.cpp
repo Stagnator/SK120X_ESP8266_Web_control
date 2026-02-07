@@ -7,12 +7,12 @@
 #include <ArduinoOTA.h>
 
 // ===== WiFi
-// #include <JustMyWifiSet.h>
-// const char *WIFI_SSID = MY_WIFI_SSID;
-// const char *WIFI_PASS = MY_WIFI_PASS;
-// const char *OTA_IP_ADDR = MY_OTA_IP_ADDR;
-const char *WIFI_SSID = "YOUR_WIFI_SSID";
-const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
+#include <JustMyWifiSet.h>
+const char *WIFI_SSID = MY_WIFI_SSID;
+const char *WIFI_PASS = MY_WIFI_PASS;
+const char *OTA_IP_ADDR = MY_OTA_IP_ADDR;
+//const char *WIFI_SSID = "YOUR_WIFI_SSID";
+//const char *WIFI_PASS = "YOUR_WIFI_PASSWORD";
 
 const char *AP_HOSTNAME = "Lab_bench_PSU AP";
 const char *ST_HOSTNAME = "Lab_bench_PSU STA";
