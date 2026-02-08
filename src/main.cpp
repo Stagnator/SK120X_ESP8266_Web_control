@@ -686,9 +686,10 @@ void setup()
   Serial.begin(115200);
   pinMode(15, OUTPUT); // esp8266 had some bag usinig serial swap without setting pin 15 to output?
   pinMode(PIN_PWM_FUN, OUTPUT);
-  analogWrite(PIN_PWM_FUN, 128); // cooler init at half speed
-  delay(100);
-  connectWiFi();
+  analogWrite(PIN_PWM_FUN, 255); // cooler init at ful speed
+  delay(1000);
+    connectWiFi();
+  analogWrite(PIN_PWM_FUN, 0); // then off until we read power
   if (WiFi.getMode() != WIFI_AP) // Only setup OTA if not in AP mode
   {
     ArduinoOTA.setHostname(ST_HOSTNAME);
